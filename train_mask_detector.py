@@ -26,7 +26,10 @@ INIT_LR = 1e-4
 EPOCHS = 20
 BS = 32
 
-DIRECTORY = r"C:\Mask Detection\CODE\Face-Mask-Detection-master\dataset"
+dirname = os.path.dirname(__file__)
+filepath = 'dataset'
+#print(os.path.join(dirname, 'dataset'))
+DIRECTORY = os.path.join(dirname, 'dataset')
 CATEGORIES = ["with_mask", "without_mask"]
 
 # grab the list of images in our dataset directory, then initialize
