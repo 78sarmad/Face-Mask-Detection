@@ -1,5 +1,5 @@
 # Face-Mask-Detection
-Real-time Face Mask Detection built on Python. Project completed by Sarmad Ashfaq, Manal Talat &amp; Faizan Zubair.
+Real-time Face Mask Detection built on Python. Project completed by Sarmad Ashfaq, [Manal Talat](https://github.com/aurora-07) &amp; Faizan Zubair.
 
 ### Without Mask
 ![Program Output](https://raw.githubusercontent.com/78sarmad/Face-Mask-Detection/main/screenshots/without_mask.png)
