@@ -27,7 +27,7 @@ EPOCHS = 20
 BS = 32
 
 dirname = os.path.dirname(__file__)
-filepath = 'dataset'
+#filepath = 'dataset'
 #print(os.path.join(dirname, 'dataset'))
 DIRECTORY = os.path.join(dirname, 'dataset')
 CATEGORIES = ["with_mask", "without_mask"]
@@ -59,7 +59,7 @@ data = np.array(data, dtype="float32")
 labels = np.array(labels)
 
 (trainX, testX, trainY, testY) = train_test_split(data, labels,
-                                                  test_size=0.20, stratify=labels, random_state=42)
+                                                  test_size=0.20, stratify=labels, random_state=78)
 
 # construct the training image generator for data augmentation
 aug = ImageDataGenerator(
@@ -110,7 +110,7 @@ H = model.fit(
     epochs=EPOCHS)
 
 # make predictions on the testing set
-print("[INFO] evaluating network...")
+print("[INFO] Evaluating network...")
 predIdxs = model.predict(testX, batch_size=BS)
 
 # for each image in the testing set we need to find the index of the
@@ -122,7 +122,7 @@ print(classification_report(testY.argmax(axis=1), predIdxs,
                             target_names=lb.classes_))
 
 # serialize the model to disk
-print("[INFO] saving mask detector model...")
+print("[INFO] Saving mask detector model...")
 model.save("mask_detector.model", save_format="h5")
 
 # plot the training loss and accuracy
