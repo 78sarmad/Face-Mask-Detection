@@ -20,37 +20,41 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-# initialize the initial learning rate, number of epochs to train for,
-# and batch size
+# initialize the globals
+# initial learning rate, number of epochs and batch size
 INIT_LR = 1e-4
 EPOCHS = 20
 BS = 32
 
+# find current file directory and build path
 dirname = os.path.dirname(__file__)
-#filepath = 'dataset'
-#print(os.path.join(dirname, 'dataset'))
-DIRECTORY = os.path.join(dirname, 'dataset')
+filepath = 'dataset'
+DIRECTORY = os.path.join(dirname, filepath)
 CATEGORIES = ["with_mask", "without_mask"]
 
-# grab the list of images in our dataset directory, then initialize
-# the list of data (i.e., images) and class images
-print("[INFO] loading images...")
+# load images from dataset directory
+print("[INFO] Loading images from dataset...")
 
-data = []
-labels = []
+data = []  # store data for images
+labels = []  # store data for labels
 
+# traverse category folders in dataset directory
 for category in CATEGORIES:
     path = os.path.join(DIRECTORY, category)
+    # loop through each image in datasets
     for img in os.listdir(path):
         img_path = os.path.join(path, img)
+        # load image into 224x224 size
         image = load_img(img_path, target_size=(224, 224))
+        # convert image to array and preprocess
         image = img_to_array(image)
         image = preprocess_input(image)
 
+        # append image data and label to arrays
         data.append(image)
         labels.append(category)
 
-# perform one-hot encoding on the labels
+# encode labels so we can use them as numpy array
 lb = LabelBinarizer()
 labels = lb.fit_transform(labels)
 labels = to_categorical(labels)
@@ -58,10 +62,12 @@ labels = to_categorical(labels)
 data = np.array(data, dtype="float32")
 labels = np.array(labels)
 
+# split data into train and test datasets
+# test dataset size is 20%
 (trainX, testX, trainY, testY) = train_test_split(data, labels,
                                                   test_size=0.20, stratify=labels, random_state=78)
 
-# construct the training image generator for data augmentation
+# augment image into multiple images making slight changes
 aug = ImageDataGenerator(
     rotation_range=20,
     zoom_range=0.15,
@@ -71,8 +77,7 @@ aug = ImageDataGenerator(
     horizontal_flip=True,
     fill_mode="nearest")
 
-# load the MobileNetV2 network, ensuring the head FC layer sets are
-# left off
+# use cnn model: mobilenetv2
 baseModel = MobileNetV2(weights="imagenet", include_top=False,
                         input_tensor=Input(shape=(224, 224, 3)))
 
@@ -94,14 +99,14 @@ model = Model(inputs=baseModel.input, outputs=headModel)
 for layer in baseModel.layers:
     layer.trainable = False
 
-# compile our model
-print("[INFO] compiling model...")
-opt = Adam(lr=INIT_LR, decay=INIT_LR / EPOCHS)
+# compile our model using ADAM optimizer and metrics set to accuracy
+print("[INFO] Compiling model...")
+opt = Adam(learning_rate=INIT_LR, decay=INIT_LR / EPOCHS)
 model.compile(loss="binary_crossentropy", optimizer=opt,
               metrics=["accuracy"])
 
 # train the head of the network
-print("[INFO] training head...")
+print("[INFO] Training head...")
 H = model.fit(
     aug.flow(trainX, trainY, batch_size=BS),
     steps_per_epoch=len(trainX) // BS,
