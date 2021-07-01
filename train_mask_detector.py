@@ -21,12 +21,12 @@ import numpy as np
 import os
 
 # initialize the globals
-# initial learning rate, number of epochs and batch size
+# learning rate, number of epochs and batch size
 INIT_LR = 1e-4
-EPOCHS = 20
-BS = 32
+EPOCHS = 4
+BS = 20
 
-# find current file directory and build path
+# find current file directory and build paths
 dirname = os.path.dirname(__file__)
 filepath = 'dataset'
 DIRECTORY = os.path.join(dirname, filepath)
@@ -59,6 +59,7 @@ lb = LabelBinarizer()
 labels = lb.fit_transform(labels)
 labels = to_categorical(labels)
 
+# set list types as numpy arrays
 data = np.array(data, dtype="float32")
 labels = np.array(labels)
 
@@ -81,8 +82,7 @@ aug = ImageDataGenerator(
 baseModel = MobileNetV2(weights="imagenet", include_top=False,
                         input_tensor=Input(shape=(224, 224, 3)))
 
-# construct the head of the model that will be placed on top of the
-# the base model
+# construct head of base model
 headModel = baseModel.output
 headModel = AveragePooling2D(pool_size=(7, 7))(headModel)
 headModel = Flatten(name="flatten")(headModel)
@@ -90,12 +90,10 @@ headModel = Dense(128, activation="relu")(headModel)
 headModel = Dropout(0.5)(headModel)
 headModel = Dense(2, activation="softmax")(headModel)
 
-# place the head FC model on top of the base model (this will become
-# the actual model we will train)
+# place head model on top, head is the model we train
 model = Model(inputs=baseModel.input, outputs=headModel)
 
-# loop over all layers in the base model and freeze them so they will
-# *not* be updated during the first training process
+# set base model layers as non-trainable so they do not get updated
 for layer in baseModel.layers:
     layer.trainable = False
 
@@ -105,8 +103,9 @@ opt = Adam(learning_rate=INIT_LR, decay=INIT_LR / EPOCHS)
 model.compile(loss="binary_crossentropy", optimizer=opt,
               metrics=["accuracy"])
 
-# train the head of the network
-print("[INFO] Training head...")
+# train the head model
+# fit the multiple augmented images from one image
+print("[INFO] Training...")
 H = model.fit(
     aug.flow(trainX, trainY, batch_size=BS),
     steps_per_epoch=len(trainX) // BS,
@@ -118,19 +117,18 @@ H = model.fit(
 print("[INFO] Evaluating network...")
 predIdxs = model.predict(testX, batch_size=BS)
 
-# for each image in the testing set we need to find the index of the
-# label with corresponding largest predicted probability
+# for each image in test set, find index of label with max probability
 predIdxs = np.argmax(predIdxs, axis=1)
 
-# show a nicely formatted classification report
+# print a classification report
 print(classification_report(testY.argmax(axis=1), predIdxs,
                             target_names=lb.classes_))
 
-# serialize the model to disk
+# save the model to disk in h5 format
 print("[INFO] Saving mask detector model...")
 model.save("mask_detector.model", save_format="h5")
 
-# plot the training loss and accuracy
+# plot the training loss and accuracy in plot.png file
 N = EPOCHS
 plt.style.use("ggplot")
 plt.figure()
